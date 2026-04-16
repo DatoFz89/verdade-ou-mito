@@ -679,7 +679,7 @@ const qs=[
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXKwIxSkTcr_pwLUmGLzA9sX3nnaK7W0ViQbKtmuPmPcLATpq6Uyhq4zVqfQEpQEGO/exec";
 
 const TOTAL=qs.length;
-let idx=0,score=0,results=[],picks=[],reviewMode=false;
+let idx=0,score=0,results=[],picks=[],reviewMode=false,answered=false;
 
 function buildDots(){
   const c=document.getElementById('dots');
@@ -766,7 +766,8 @@ function renderFull(){
 function render(){reviewMode=false;renderFull();}
 
 function answer(val){
-  if(reviewMode)return;
+  if(reviewMode||answered)return;
+  answered=true;
   const q=qs[idx];
   const ok=val===q.ans;
   if(ok)score++;
@@ -809,6 +810,7 @@ function next(){
   const card=document.getElementById('qcard');
   card.classList.add('fade');
   setTimeout(()=>{
+    answered=false;
     if(reviewMode){
       if(idx<results.length-1){idx++;reviewMode=true;}
       else if(idx===results.length-1&&results.length===TOTAL){card.classList.remove('fade');showFinal();return;}
@@ -822,7 +824,7 @@ function goBack(){
   if(idx===0)return;
   const card=document.getElementById('qcard');
   card.classList.add('fade');
-  setTimeout(()=>{idx--;reviewMode=(results[idx]!==undefined);renderFull();card.classList.remove('fade');},180);
+  setTimeout(()=>{answered=false;idx--;reviewMode=(results[idx]!==undefined);renderFull();card.classList.remove('fade');},180);
 }
 
 function showFinal(){
@@ -858,7 +860,7 @@ function reviewQ(i){
 }
 
 function restart(){
-  idx=0;score=0;results=[];picks=[];reviewMode=false;
+  idx=0;score=0;results=[];picks=[];reviewMode=false;answered=false;
   document.getElementById('sc').textContent='0';
   document.getElementById('final').style.display='none';
   document.getElementById('qcard').style.display='block';
