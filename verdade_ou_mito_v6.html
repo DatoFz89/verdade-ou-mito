@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Manutenção Corretiva - UFCD 6584</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Oswald:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --black:#0a0a0a;
+  --dark:#111111;
+  --mid:#1a1a1a;
+  --panel:#222222;
+  --border:#333333;
+  --red:#e63b2e;
+  --red-dark:#b02a1f;
+  --red-glow:rgba(230,59,46,0.25);
+  --gold:#f0a500;
+  --gold-dark:#c47f00;
+  --green:#2ecc71;
+  --green-dark:#27ae60;
+  --text:#f0ede8;
+  --muted:#888880;
+  --font-head:'Black Han Sans',sans-serif;
+  --font-body:'Oswald',sans-serif;
+  --font-mono:'Share Tech Mono',monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:var(--black);
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,0.03) 39px,rgba(255,255,255,0.03) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,0.02) 39px,rgba(255,255,255,0.02) 40px);
+  min-height:100vh;
+  color:var(--text);
+}
+
+#app{font-family:var(--font-body);padding:1.25rem 0;max-width:800px;margin:0 auto}
+
+/* HEADER */
+.header{
+  background:var(--dark);
+  border:2px solid var(--border);
+  border-top:4px solid var(--red);
+  border-radius:4px;
+  padding:1.2rem 1.5rem;
+  margin-bottom:1.2rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:relative;
+  overflow:hidden;
+}
+.header::before{
+  content:'';
+  position:absolute;
+  left:0;top:0;right:0;bottom:0;
+  background:linear-gradient(135deg,rgba(230,59,46,0.07) 0%,transparent 60%);
+  pointer-events:none;
+}
+.header-left{display:flex;flex-direction:column;gap:2px}
+.header-title{
+  font-family:var(--font-head);
+  font-size:38px;
+  color:var(--text);
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  line-height:1;
+}
+.header-title span{color:var(--red)}
+.header-sub{
+  font-family:var(--font-mono);
+  font-size:14px;
+  color:var(--muted);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+}
+.score-pill{
+  background:var(--mid);
+  border:2px solid var(--red);
+  border-radius:4px;
+  padding:10px 22px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  position:relative;
+}
+.score-pill::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:var(--red-glow);
+  border-radius:3px;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:1}}
+.score-num{
+  font-family:var(--font-head);
+  font-size:52px;
+  color:var(--red);
+  line-height:1;
+  position:relative;
+  text-shadow:0 0 20px var(--red-glow);
+}
+.score-lbl{
+  font-family:var(--font-mono);
+  font-size:13px;
+  color:var(--muted);
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  position:relative;
+}
+
+/* PROGRESS */
+.prog-wrap{margin-bottom:1.2rem}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.prog-label{
+  font-family:var(--font-mono);
+  font-size:16px;
+  font-weight:700;
+  color:var(--red);
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+.prog-bar-outer{
+  height:4px;
+  background:var(--border);
+  border-radius:2px;
+  margin-bottom:10px;
+  overflow:hidden;
+}
+.prog-bar-inner{
+  height:100%;
+  background:linear-gradient(90deg,var(--red-dark),var(--red));
+  border-radius:2px;
+  transition:width 0.3s ease;
+  box-shadow:0 0 8px var(--red-glow);
+}
+.prog-dots{display:flex;gap:6px;flex-wrap:wrap}
+.dot{
+  width:22px;height:22px;
+  border-radius:2px;
+  background:var(--mid);
+  border:1px solid var(--border);
+  transition:all 0.3s;
+  cursor:pointer;
+}
+.dot.done-ok{background:var(--green);border-color:var(--green-dark)}
+.dot.done-ko{background:var(--red);border-color:var(--red-dark)}
+.dot.current{
+  background:var(--mid);
+  border:2px solid var(--red);
+  box-shadow:0 0 8px var(--red-glow);
+}
+
+/* QUESTION CARD */
+.qcard{
+  background:var(--dark);
+  border:2px solid var(--border);
+  border-radius:4px;
+  overflow:hidden;
+  transition:opacity 0.2s;
+}
+.qcard.fade{opacity:0}
+.qtopic{
+  background:var(--mid);
+  border-bottom:2px solid var(--red);
+  padding:10px 20px;
+  font-family:var(--font-mono);
+  font-size:13px;
+  font-weight:700;
+  color:var(--red);
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.qtopic::before{content:'▶';font-size:10px;opacity:0.7}
+.qbody{padding:2rem 1.5rem 1.5rem}
+.qtext{
+  font-family:var(--font-body);
+  font-size:26px;
+  font-weight:400;
+  color:var(--text);
+  line-height:1.6;
+  margin-bottom:1.8rem;
+  min-height:60px;
+  border-left:3px solid var(--red);
+  padding-left:1rem;
+}
+
+/* ANSWER BUTTONS */
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
+.abtn{
+  padding:22px 18px;
+  border-radius:3px;
+  border:2px solid var(--border);
+  background:var(--mid);
+  color:var(--muted);
+  font-family:var(--font-head);
+  font-size:28px;
+  letter-spacing:0.08em;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  transition:all 0.15s;
+  text-transform:uppercase;
+  position:relative;
+  overflow:hidden;
+}
+.abtn::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  opacity:0;
+  transition:opacity 0.15s;
+}
+.abtn:hover:not(:disabled){transform:translateY(-2px);color:var(--text)}
+.abtn:active:not(:disabled){transform:scale(0.98)}
+.abtn:disabled{cursor:not-allowed;opacity:0.7}
+
+/* Verdade button */
+.abtn.v{border-color:var(--green-dark);color:var(--green)}
+.abtn.v::before{background:rgba(46,204,113,0.08)}
+.abtn.v:hover:not(:disabled)::before{opacity:1}
+.abtn.v:hover:not(:disabled){border-color:var(--green);box-shadow:0 0 12px rgba(46,204,113,0.2)}
+
+/* Mito button */
+.abtn.m{border-color:var(--red-dark);color:var(--red)}
+.abtn.m::before{background:rgba(230,59,46,0.08)}
+.abtn.m:hover:not(:disabled)::before{opacity:1}
+.abtn.m:hover:not(:disabled){border-color:var(--red);box-shadow:0 0 12px var(--red-glow)}
+
+.abtn.correct-pick{background:var(--green-dark);border-color:var(--green);color:#fff;box-shadow:0 0 12px rgba(46,204,113,0.3)}
+.abtn.wrong-pick{background:var(--red-dark);border-color:var(--red);color:#fff;box-shadow:0 0 12px var(--red-glow)}
+.abtn.reveal-correct{background:var(--green-dark);border-color:var(--green);color:#fff}
+.icon{width:30px;height:30px;flex-shrink:0}
+
+/* FEEDBACK */
+.fb{
+  border-radius:3px;
+  padding:1.2rem 1.5rem;
+  margin-top:1rem;
+  font-family:var(--font-body);
+  font-size:20px;
+  line-height:1.6;
+  display:none;
+  border-left:4px solid;
+}
+.fb.ok{background:rgba(46,204,113,0.08);border-color:var(--green);color:#c3f0d6}
+.fb.ko{background:rgba(230,59,46,0.08);border-color:var(--red);color:#f5c0bb}
+.fb-top{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.fb-badge{
+  font-family:var(--font-head);
+  font-size:18px;
+  letter-spacing:0.1em;
+  padding:4px 14px;
+  border-radius:2px;
+}
+.fb-badge.ok{background:var(--green);color:#000}
+.fb-badge.ko{background:var(--red);color:#fff}
+
+/* REVIEW MODE BANNER */
+.review-mode-banner{
+  background:rgba(240,165,0,0.1);
+  border:1px solid var(--gold-dark);
+  border-radius:3px;
+  padding:8px 14px;
+  font-family:var(--font-mono);
+  font-size:13px;
+  color:var(--gold);
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  margin-bottom:8px;
+  display:none;
+  text-align:center;
+}
+
+/* NAV BUTTONS */
+.nav-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:1rem}
+.btn-nav{
+  width:100%;padding:16px;
+  border-radius:3px;
+  font-family:var(--font-mono);
+  font-size:16px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.15s;
+  display:none;
+}
+.btn-back-nav{border:2px solid var(--border);background:transparent;color:var(--muted)}
+.btn-back-nav:hover{border-color:var(--muted);color:var(--text);background:var(--mid)}
+.btn-next-nav{border:2px solid var(--green-dark);background:transparent;color:var(--green)}
+.btn-next-nav:hover{background:rgba(46,204,113,0.1);box-shadow:0 0 10px rgba(46,204,113,0.15)}
+
+/* SKIP */
+.btn-skip{
+  width:100%;padding:14px;
+  border-radius:3px;
+  border:1px dashed var(--border);
+  background:transparent;
+  color:var(--muted);
+  font-family:var(--font-mono);
+  font-size:14px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  cursor:pointer;
+  margin-top:8px;
+  transition:all 0.15s;
+}
+.btn-skip:hover{background:var(--mid);border-color:var(--muted);color:var(--text)}
+
+/* FINAL SCREEN */
+.final{
+  background:var(--dark);
+  border:2px solid var(--border);
+  border-top:4px solid var(--red);
+  border-radius:4px;
+  padding:2rem 1.5rem;
+  text-align:center;
+  display:none;
+  position:relative;
+  overflow:hidden;
+}
+.final::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at top,rgba(230,59,46,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.final-score{
+  font-family:var(--font-head);
+  font-size:100px;
+  color:var(--red);
+  line-height:1;
+  text-shadow:0 0 40px var(--red-glow);
+}
+.final-total{
+  font-family:var(--font-mono);
+  font-size:16px;
+  color:var(--muted);
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  margin-top:4px;
+  margin-bottom:1rem;
+}
+.final-msg{
+  font-family:var(--font-body);
+  font-size:20px;
+  color:var(--text);
+  line-height:1.6;
+  margin-bottom:1.5rem;
+  padding:0 1rem;
+  opacity:0.9;
+}
+.final-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem}
+.stat-box{
+  background:var(--mid);
+  border:1px solid var(--border);
+  border-radius:3px;
+  padding:12px;
+  text-align:center;
+}
+.stat-n{font-family:var(--font-head);font-size:52px;font-weight:700}
+.stat-n.ok{color:var(--green);text-shadow:0 0 20px rgba(46,204,113,0.3)}
+.stat-n.ko{color:var(--red);text-shadow:0 0 20px var(--red-glow)}
+.stat-l{font-family:var(--font-mono);font-size:13px;color:var(--muted);margin-top:4px;letter-spacing:0.1em;text-transform:uppercase}
+
+/* SUBMIT */
+.btn-submeter{
+  display:block;
+  width:100%;
+  margin:0 0 12px 0;
+  padding:20px 48px;
+  border-radius:3px;
+  border:2px solid var(--red);
+  background:var(--red);
+  color:#fff;
+  font-family:var(--font-head);
+  font-size:24px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.15s;
+  position:relative;
+}
+.btn-submeter:hover:not(:disabled){background:var(--red-dark);box-shadow:0 0 20px var(--red-glow)}
+.btn-submeter:disabled{background:var(--border);border-color:var(--border);cursor:not-allowed}
+
+.submeter-aviso{
+  font-family:var(--font-mono);
+  font-size:14px;
+  color:var(--gold);
+  background:rgba(240,165,0,0.08);
+  border:1px solid var(--gold-dark);
+  border-radius:3px;
+  padding:10px 14px;
+  margin-bottom:12px;
+  display:none;
+  text-align:left;
+  line-height:1.5;
+  letter-spacing:0.05em;
+}
+.submeter-ok{
+  font-family:var(--font-mono);
+  font-size:14px;
+  color:var(--green);
+  background:rgba(46,204,113,0.08);
+  border:1px solid var(--green-dark);
+  border-radius:3px;
+  padding:14px 16px;
+  margin-bottom:12px;
+  display:none;
+  text-align:center;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+
+/* RESTART */
+.btn-restart{
+  padding:18px 40px;
+  border-radius:3px;
+  border:2px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  font-family:var(--font-mono);
+  font-size:16px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  cursor:pointer;
+  margin-bottom:1.5rem;
+  transition:all 0.15s;
+}
+.btn-restart:hover{border-color:var(--text);color:var(--text);background:var(--mid)}
+
+/* REVIEW LIST */
+.review{text-align:left;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem}
+.review-title{
+  font-family:var(--font-mono);
+  font-size:13px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+  margin-bottom:10px;
+}
+.ri{
+  display:flex;gap:12px;align-items:flex-start;
+  padding:8px 6px;
+  border-bottom:1px solid var(--border);
+  font-family:var(--font-body);
+  font-size:18px;
+  color:var(--muted);
+  line-height:1.4;
+  cursor:pointer;
+  border-radius:2px;
+  transition:all 0.15s;
+}
+.ri:hover{background:var(--mid);color:var(--text);padding-left:12px}
+.ri-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.ri-dot.ok{background:var(--green)}
+.ri-dot.ko{background:var(--red)}
+
+/* NOME MODAL */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.85);
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;
+  backdrop-filter:blur(4px);
+}
+.modal-box{
+  background:var(--dark);
+  border:2px solid var(--red);
+  border-radius:4px;
+  padding:2rem 1.5rem;
+  width:90%;
+  max-width:400px;
+  box-shadow:0 0 40px var(--red-glow);
+}
+.modal-title{
+  font-family:var(--font-head);
+  font-size:22px;
+  color:var(--text);
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  margin-bottom:1rem;
+}
+.modal-input{
+  width:100%;
+  padding:14px 16px;
+  background:var(--mid);
+  border:2px solid var(--border);
+  border-radius:3px;
+  color:var(--text);
+  font-family:var(--font-mono);
+  font-size:18px;
+  letter-spacing:0.05em;
+  outline:none;
+  transition:border-color 0.15s;
+  margin-bottom:1rem;
+}
+.modal-input:focus{border-color:var(--red)}
+.modal-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.modal-ok{
+  padding:14px;border-radius:3px;
+  border:2px solid var(--red);background:var(--red);
+  color:#fff;font-family:var(--font-head);font-size:18px;
+  letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;
+  transition:all 0.15s;
+}
+.modal-ok:hover{background:var(--red-dark)}
+.modal-cancel{
+  padding:14px;border-radius:3px;
+  border:2px solid var(--border);background:transparent;
+  color:var(--muted);font-family:var(--font-mono);font-size:15px;
+  letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;
+  transition:all 0.15s;
+}
+.modal-cancel:hover{border-color:var(--muted);color:var(--text)}
+
+@media(max-width:600px){
+  #app{padding:0.75rem 0.5rem}
+  .header{padding:0.9rem 1rem;flex-wrap:wrap;gap:10px}
+  .header-title{font-size:26px}
+  .header-sub{font-size:11px}
+  .score-pill{padding:7px 14px}
+  .score-num{font-size:36px}
+  .score-lbl{font-size:11px}
+  .qtopic{font-size:11px;padding:8px 14px}
+  .qbody{padding:1.2rem 1rem 1rem}
+  .qtext{font-size:18px;margin-bottom:1.2rem}
+  .abtn{font-size:20px;padding:16px 10px}
+  .icon{width:22px;height:22px}
+  .fb{font-size:16px;padding:1rem}
+  .fb-badge{font-size:15px}
+  .btn-nav{font-size:13px;padding:12px}
+  .btn-skip{font-size:12px;padding:11px}
+  .final-score{font-size:70px}
+  .final-total{font-size:13px}
+  .final-msg{font-size:16px;padding:0}
+  .stat-n{font-size:38px}
+  .stat-l{font-size:11px}
+  .btn-submeter{font-size:18px;padding:16px}
+  .btn-restart{font-size:13px;padding:14px 24px}
+  .modal-box{padding:1.5rem 1rem}
+  .modal-title{font-size:18px}
+  .modal-input{font-size:16px;padding:10px 12px}
+  .dot{width:16px;height:16px}
+  .prog-label{font-size:13px}
+}
+</style>
+</head>
+<body>
+
+<h2 class="sr-only">Quiz Verdade ou Mito – Manutenção Corretiva UFCD 6584</h2>
+<div id="app">
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-title">Verdade <span>ou</span> Mito?</div>
+    <div class="header-sub">// UFCD 6584 · Manutenção Corretiva</div>
+  </div>
+  <div class="score-pill">
+    <div class="score-num" id="sc">0</div>
+    <div class="score-lbl">pontos</div>
+  </div>
+</div>
+
+<div class="prog-wrap">
+  <div class="prog-row">
+    <span class="prog-label" id="prog-lbl">Pergunta 1 de 25</span>
+    <span class="prog-label" id="prog-pct">0%</span>
+  </div>
+  <div class="prog-bar-outer"><div class="prog-bar-inner" id="prog-bar" style="width:0%"></div></div>
+  <div class="prog-dots" id="dots"></div>
+</div>
+
+<div class="qcard" id="qcard">
+  <div class="qtopic" id="qtopic"></div>
+  <div class="qbody">
+    <div class="qtext" id="qtext"></div>
+    <div class="btn-row">
+      <button class="abtn v" id="btnV" onclick="answer(true)">
+        <svg class="icon" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8" stroke="#2ecc71" stroke-width="1.2"/><path d="M5 9l3 3 5-5" stroke="#2ecc71" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Verdade
+      </button>
+      <button class="abtn m" id="btnM" onclick="answer(false)">
+        <svg class="icon" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="8" stroke="#e63b2e" stroke-width="1.2"/><path d="M6 6l6 6M12 6l-6 6" stroke="#e63b2e" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Mito
+      </button>
+    </div>
+    <button class="btn-skip" id="btnSkip" onclick="skip()">⭭ Saltar esta pergunta</button>
+    <div class="fb" id="fb">
+      <div class="fb-top">
+        <span class="fb-badge" id="fb-badge"></span>
+        <span id="fb-title" style="font-size:18px;font-family:'Oswald',sans-serif;font-weight:600"></span>
+      </div>
+      <div id="fb-exp"></div>
+    </div>
+    <div class="review-mode-banner" id="review-banner">👁 Modo de revisão — esta pergunta já foi respondida</div>
+    <div class="nav-btns">
+      <button class="btn-nav btn-back-nav" id="btnBack" onclick="goBack()">← Anterior</button>
+      <button class="btn-nav btn-next-nav" id="btnNext" onclick="next()">Próxima →</button>
+    </div>
+  </div>
+</div>
+
+<div class="final" id="final">
+  <div class="final-score" id="fscore"></div>
+  <div class="final-total" id="final-total-text">respostas corretas em 25</div>
+  <div class="final-msg" id="fmsg"></div>
+  <div class="final-stats">
+    <div class="stat-box"><div class="stat-n ok" id="f-ok"></div><div class="stat-l">Corretas</div></div>
+    <div class="stat-box"><div class="stat-n ko" id="f-ko"></div><div class="stat-l">Erradas</div></div>
+  </div>
+
+  <div id="submeter-aviso" class="submeter-aviso">⚠️ Ainda tens perguntas por responder. Responde a todas antes de submeter.</div>
+  <div id="submeter-ok" class="submeter-ok">✓ Atividade submetida com sucesso!<br><span style="font-size:12px;opacity:0.8;text-transform:none;letter-spacing:0">A tua pontuação (n.º de respostas corretas) foi registada.</span></div>
+  <button class="btn-submeter" id="btnSubmeter" onclick="submeterAtividade()">📤 Submeter Atividade</button>
+  <button class="btn-restart" onclick="restart()">Recomeçar</button>
+
+  <div class="review">
+    <div class="review-title">// Resumo — clica para rever</div>
+    <div id="review-list"></div>
+  </div>
+</div>
+
+</div>
+
+<!-- MODAL NOME -->
+<div class="modal-overlay" id="modalOverlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">Introduz o teu nome</div>
+    <input class="modal-input" id="modalInput" type="text" placeholder="Nome completo..." autocomplete="off" />
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="fecharModal()">Cancelar</button>
+      <button class="modal-ok" onclick="confirmarNome()">Submeter</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const qs=[
+  {topic:"Definição",q:"A manutenção corretiva é realizada antes da ocorrência de uma falha, com o objetivo de a prevenir.",ans:false,exp:"Mito. A manutenção corretiva realiza-se sempre após a ocorrência de uma falha ou avaria, para restaurar o equipamento ao seu estado operacional original. A manutenção que ocorre antes da falha é a preventiva."},
+  {topic:"Definição",q:"O objetivo da manutenção corretiva é restaurar o equipamento ao seu estado operacional original, garantindo a continuidade e segurança dos cuidados.",ans:true,exp:"Correto. Esta é a definição exata do trabalho: restaurar o equipamento ao estado operacional original, assegurando a continuidade e segurança dos cuidados de saúde."},
+  {topic:"Tipos",q:"A manutenção corretiva imediata pode ser adiada se não existirem recursos humanos disponíveis no momento da avaria.",ans:false,exp:"Mito. A manutenção imediata (de urgência) não pode ser adiada em circunstância alguma – é utilizada precisamente quando a avaria coloca em risco a segurança do doente ou do profissional."},
+  {topic:"Tipos",q:"A manutenção corretiva diferida permite agendar a intervenção para o momento de menor impacto no serviço, pois não existe risco imediato.",ans:true,exp:"Correto. A manutenção diferida (programada) é agendada para o momento mais oportuno, permitindo planear recursos humanos e materiais adequados sem risco imediato para a segurança."},
+  {topic:"Tipos",q:"A falha de um ventilador ou monitor cardíaco exige manutenção corretiva diferida, pois pode ser agendada para um momento mais conveniente.",ans:false,exp:"Mito. O trabalho apresenta ventiladores e monitores cardíacos como exemplos de equipamentos que exigem manutenção imediata (de urgência), pois a avaria coloca em risco direto a vida do doente."},
+  {topic:"Processo e Etapas",q:"A primeira etapa do processo de manutenção corretiva é a deteção da falha pelo utilizador ou pelo sistema de monitorização.",ans:true,exp:"Correto. O processo de manutenção corretiva inicia-se com a deteção da falha, que pode ser feita pelo utilizador ou pelo sistema de monitorização, seguida da comunicação ao responsável."},
+  {topic:"Processo e Etapas",q:"O diagnóstico técnico é a segunda etapa do processo de manutenção corretiva, ocorrendo imediatamente após a deteção da falha.",ans:false,exp:"Mito. O diagnóstico técnico é a 4.ª etapa. Após a deteção (1.ª), seguem-se a retirada de serviço e sinalização (2.ª) e a comunicação e registo em ficha de avaria (3.ª), só então o técnico realiza o diagnóstico."},
+  {topic:"Processo e Etapas",q:"A verificação e reintegração do equipamento é a última etapa do processo, incluindo teste funcional e de segurança antes do regresso ao serviço.",ans:true,exp:"Correto. A 6.ª e última etapa é a verificação e reintegração: teste funcional e de segurança, registo da intervenção e devolução ao serviço com ficha atualizada."},
+  {topic:"Processo e Etapas",q:"Um equipamento avariado pode continuar a ser utilizado caso não exista substituto disponível e haja pressão no serviço.",ans:false,exp:"Nunca. A segurança do doente é sempre a prioridade absoluta. O trabalho é explícito: nunca se deve usar um equipamento com avaria identificada, independentemente da pressão assistencial."},
+  {topic:"Equipamentos na Saúde",q:"As autoclaves, centrifugadoras e microscópios pertencem à categoria de Equipamentos de Laboratório segundo o trabalho.",ans:false,exp:"Mito. O trabalho distribui estes equipamentos por categorias diferentes: autoclaves pertencem aos Equipamentos de Laboratório, mas centrifugadoras também, enquanto microscópios igualmente. No entanto, as autoclaves são especificamente classificadas em Equipamentos de Laboratório – o erro está em afirmar que todos pertencem à mesma categoria sem distinção das infraestruturas críticas."},
+  {topic:"Equipamentos na Saúde",q:"Os geradores de emergência e os sistemas de oxigénio canalizado são classificados como Infraestruturas Críticas no trabalho.",ans:true,exp:"Correto. O trabalho inclui geradores de emergência, sistemas de oxigénio canalizado, climatização de bloco operatório e UPS (alimentação ininterrupta) na categoria de Infraestruturas Críticas."},
+  {topic:"Equipamentos na Saúde",q:"Uma bomba infusora avariada pode representar risco imediato de vida por causar dosagem incorreta de medicação.",ans:true,exp:"Correto. O trabalho refere explicitamente que dosagem incorreta por bomba infusora avariada é um dos principais riscos para o doente, podendo ser imediatamente fatal num doente crítico."},
+  {topic:"Responsabilidades",q:"O Técnico Auxiliar de Saúde deve tentar reparar o equipamento avariado se a avaria for simples e não existir técnico de manutenção disponível.",ans:false,exp:"Mito. O trabalho é claro: o TAS não deve tentar reparar – apenas identificar, retirar de serviço, sinalizar e comunicar. A reparação é sempre responsabilidade do serviço de manutenção/engenharia."},
+  {topic:"Responsabilidades",q:"A aprovação de orçamentos de reparação de equipamentos é uma responsabilidade da Direção/Gestão do Serviço, não do TAS.",ans:true,exp:"Correto. Segundo o trabalho, aprovar orçamentos de reparação cabe à Direção/Gestão do Serviço. O TAS limita-se a identificar, sinalizar, registar e comunicar a avaria."},
+  {topic:"Responsabilidades",q:"Atualizar o historial de manutenção e validar o equipamento reparado são responsabilidades do Serviço de Manutenção/Engenharia.",ans:true,exp:"Correto. O trabalho atribui ao Serviço de Manutenção/Engenharia as responsabilidades de testar e validar o equipamento reparado e atualizar o historial de manutenção."},
+  {topic:"Registos e Documentação",q:"A ficha de avaria deve incluir o grau de urgência da intervenção, mas não necessita de registar a data e hora da ocorrência.",ans:false,exp:"Mito. O trabalho especifica que a ficha de avaria deve obrigatoriamente incluir: identificação do equipamento, descrição da falha, data/hora da ocorrência, nome do funcionário que comunicou e grau de urgência – todos estes campos são obrigatórios."},
+  {topic:"Registos e Documentação",q:"O Registo de Equipamento (Historial) serve de suporte para a decisão de substituição do equipamento e é obrigatório para acreditação hospitalar.",ans:true,exp:"Correto. Segundo o trabalho, o historial compila todas as intervenções ao longo da vida útil, inclui análise de fiabilidade e taxa de avaria, e é obrigatório para efeitos de acreditação hospitalar."},
+  {topic:"Registos e Documentação",q:"O custo da reparação (peças e mão-de-obra) deve constar na Ordem de Trabalho (OT), não na Ficha de Avaria.",ans:true,exp:"Correto. O trabalho distingue os dois documentos: a Ficha de Avaria regista a falha e urgência, enquanto a Ordem de Trabalho inclui materiais utilizados, horas de trabalho e custo da reparação."},
+  {topic:"Riscos e Segurança",q:"A responsabilidade legal por uso de equipamento avariado recai apenas sobre o técnico de manutenção que não reparou o equipamento a tempo.",ans:false,exp:"Mito. O trabalho refere que o profissional (incluindo o TAS) pode incorrer em responsabilidade legal por usar um equipamento com avaria identificada. A responsabilidade é partilhada e depende de quem usou, quem sabia e quem não comunicou."},
+  {topic:"Riscos e Segurança",q:"Uma autoclave avariada pode originar infeções nosocomiais por esterilização deficiente, com impacto direto na segurança do doente.",ans:true,exp:"Correto. O trabalho cita este exemplo nas Consequências Reais da Falta de Manutenção: infeções nosocomiais por esterilização deficiente causada por autoclave avariada."},
+  {topic:"Impacto Económico",q:"Por cada 1€ investido em manutenção programada, poupam-se até 3€ em intervenções corretivas de emergência.",ans:false,exp:"Mito. O valor correto apresentado no trabalho é até 5€ poupados por cada 1€ investido em manutenção programada – não 3€. Esta é uma distinção importante do slide de Impacto Económico."},
+  {topic:"Impacto Económico",q:"Hospitais com planos de manutenção estruturados registam menos 40% de intervenções corretivas urgentes.",ans:true,exp:"Correto. Este dado consta no slide de Impacto Económico do trabalho, demonstrando o valor económico e assistencial de uma estratégia de manutenção preventiva bem implementada."},
+  {topic:"Ciclo de Vida",q:"A decisão de abate de um equipamento médico deve basear-se exclusivamente na sua idade, independentemente do historial de manutenção.",ans:false,exp:"Mito. O trabalho é explícito: a decisão de abate baseia-se no historial de manutenção, taxa de avaria e custo de manutenção acumulado versus custo de novo equipamento – a idade isolada não é critério suficiente."},
+  {topic:"Tecnologia e Inovação",q:"A tecnologia IoT permite que sensores nos equipamentos enviem alertas automáticos ao serviço de manutenção antes da falha total, sendo já utilizada em ventiladores e monitores cardíacos.",ans:true,exp:"Correto. O trabalho refere que a telemetria IoT já é utilizada em ventiladores e monitores cardíacos de última geração para deteção precoce de anomalias, enviando alertas automáticos antes da falha total."},
+  {topic:"Tecnologia e Inovação",q:"O software GMAO elimina o registo em papel ao centralizar ordens de trabalho, historial e stocks de peças, mas não reduz erros de comunicação.",ans:false,exp:"Mito. O trabalho afirma que o GMAO centraliza ordens de trabalho, historial e stocks de peças, eliminando o registo em papel E reduzindo erros de comunicação – ambos os benefícios são mencionados."}
+];
+
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXKwIxSkTcr_pwLUmGLzA9sX3nnaK7W0ViQbKtmuPmPcLATpq6Uyhq4zVqfQEpQEGO/exec";
+
+const TOTAL=qs.length;
+let idx=0,score=0,results=[],picks=[],reviewMode=false;
+
+function buildDots(){
+  const c=document.getElementById('dots');
+  c.innerHTML='';
+  for(let i=0;i<TOTAL;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i===0?' current':'');
+    d.id='d'+i;
+    d.title='Pergunta '+(i+1);
+    d.onclick=(()=>{const qi=i;return()=>jumpTo(qi);})();
+    c.appendChild(d);
+  }
+}
+
+function jumpTo(i){
+  const card=document.getElementById('qcard');
+  card.classList.add('fade');
+  setTimeout(()=>{idx=i;reviewMode=(results[i]!==undefined);renderFull();card.classList.remove('fade');},180);
+}
+
+function updateDots(){
+  for(let i=0;i<TOTAL;i++){
+    const d=document.getElementById('d'+i);
+    if(!d)continue;
+    if(i<results.length&&i!==idx){d.className='dot '+(results[i]?'done-ok':'done-ko');}
+    else if(i===idx){d.className='dot current';}
+    else{d.className='dot';}
+  }
+}
+
+function renderFull(){
+  const q=qs[idx];
+  document.getElementById('prog-lbl').textContent=`Pergunta ${idx+1} de ${TOTAL}`;
+  const pct=Math.round(((reviewMode?idx+1:idx)/TOTAL)*100);
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-bar').style.width=pct+'%';
+  document.getElementById('qtopic').textContent=q.topic;
+  document.getElementById('qtext').textContent=q.q;
+  const bv=document.getElementById('btnV'),bm=document.getElementById('btnM');
+  const banner=document.getElementById('review-banner');
+  const btnBack=document.getElementById('btnBack');
+  const btnNext=document.getElementById('btnNext');
+  const btnSkip=document.getElementById('btnSkip');
+  updateDots();
+  btnSkip.style.display=(!reviewMode&&results[idx]===undefined&&idx<TOTAL-1)?'block':'none';
+  if(reviewMode){
+    const wasCorrect=results[idx];
+    const picked=picks[idx];
+    bv.disabled=true;bm.disabled=true;
+    bv.className='abtn v';bm.className='abtn m';
+    if(picked===true){
+      bv.className='abtn '+(wasCorrect?'correct-pick':'wrong-pick');
+      if(!wasCorrect)bm.className='abtn reveal-correct';
+    } else {
+      bm.className='abtn '+(wasCorrect?'correct-pick':'wrong-pick');
+      if(!wasCorrect)bv.className='abtn reveal-correct';
+    }
+    const fb=document.getElementById('fb');
+    fb.className='fb '+(wasCorrect?'ok':'ko');
+    document.getElementById('fb-badge').className='fb-badge '+(wasCorrect?'ok':'ko');
+    document.getElementById('fb-badge').textContent=wasCorrect?'Correto!':'Errado!';
+    document.getElementById('fb-title').textContent=wasCorrect?(picked?'É mesmo verdade.':'É mesmo um mito.'):(picked?'Afinal é um mito.':'Afinal é verdade.');
+    document.getElementById('fb-exp').textContent=q.exp;
+    fb.style.display='block';
+    banner.style.display='block';
+    if(idx<results.length-1){
+      btnNext.style.display='block';btnNext.textContent='Próxima →';
+    } else if(results.length===TOTAL&&idx===TOTAL-1){
+      btnNext.style.display='block';btnNext.textContent='Ver resultados →';
+    } else if(idx===results.length-1&&results.length<TOTAL){
+      btnNext.style.display='block';btnNext.textContent='Continuar →';
+    } else {btnNext.style.display='none';}
+  } else {
+    bv.disabled=false;bm.disabled=false;
+    bv.className='abtn v';bm.className='abtn m';
+    document.getElementById('fb').style.display='none';
+    banner.style.display='none';
+    btnNext.style.display='none';
+    btnNext.textContent='Próxima →';
+  }
+  btnBack.style.display=idx>0?'block':'none';
+}
+
+function render(){reviewMode=false;renderFull();}
+
+function answer(val){
+  if(reviewMode)return;
+  const q=qs[idx];
+  const ok=val===q.ans;
+  if(ok)score++;
+  results.push(ok);picks.push(val);
+  document.getElementById('sc').textContent=score;
+  const bv=document.getElementById('btnV'),bm=document.getElementById('btnM');
+  bv.disabled=true;bm.disabled=true;
+  if(val){
+    bv.className='abtn '+(ok?'correct-pick':'wrong-pick');
+    if(!ok)bm.className='abtn reveal-correct';
+  } else {
+    bm.className='abtn '+(ok?'correct-pick':'wrong-pick');
+    if(!ok)bv.className='abtn reveal-correct';
+  }
+  const fb=document.getElementById('fb');
+  fb.className='fb '+(ok?'ok':'ko');
+  document.getElementById('fb-badge').className='fb-badge '+(ok?'ok':'ko');
+  document.getElementById('fb-badge').textContent=ok?'Correto!':'Errado!';
+  document.getElementById('fb-title').textContent=ok?(val?'É mesmo verdade.':'É mesmo um mito.'):(val?'Afinal é um mito.':'Afinal é verdade.');
+  document.getElementById('fb-exp').textContent=q.exp;
+  fb.style.display='block';
+  document.getElementById('review-banner').style.display='none';
+  document.getElementById('btnSkip').style.display='none';
+  const d=document.getElementById('d'+idx);
+  if(d)d.className='dot '+(ok?'done-ok':'done-ko');
+  const pct=Math.round(((idx+1)/TOTAL)*100);
+  document.getElementById('prog-pct').textContent=pct+'%';
+  document.getElementById('prog-bar').style.width=pct+'%';
+  document.getElementById('btnBack').style.display=idx>0?'block':'none';
+  if(idx<TOTAL-1){
+    const btnNext=document.getElementById('btnNext');
+    btnNext.style.display='block';
+    btnNext.textContent='Próxima →';
+  } else {
+    setTimeout(showFinal,600);
+  }
+}
+
+function next(){
+  const card=document.getElementById('qcard');
+  card.classList.add('fade');
+  setTimeout(()=>{
+    if(reviewMode){
+      if(idx<results.length-1){idx++;reviewMode=true;}
+      else if(idx===results.length-1&&results.length===TOTAL){card.classList.remove('fade');showFinal();return;}
+      else{idx++;reviewMode=false;}
+    } else {idx++;reviewMode=false;}
+    renderFull();card.classList.remove('fade');
+  },180);
+}
+
+function goBack(){
+  if(idx===0)return;
+  const card=document.getElementById('qcard');
+  card.classList.add('fade');
+  setTimeout(()=>{idx--;reviewMode=(results[idx]!==undefined);renderFull();card.classList.remove('fade');},180);
+}
+
+function showFinal(){
+  document.getElementById('qcard').style.display='none';
+  document.getElementById('prog-lbl').textContent='Concluído!';
+  document.getElementById('prog-pct').textContent='100%';
+  document.getElementById('prog-bar').style.width='100%';
+  const wrong=TOTAL-score;
+  const pct=Math.round((score/TOTAL)*100);
+  let msg='';
+  if(pct===100)msg='Perfeito! Dominam completamente todos os conteúdos sobre manutenção corretiva. Excelente trabalho!';
+  else if(pct>=80)msg='Muito bom resultado! Têm um sólido conhecimento do tema. Rever os pontos errados.';
+  else if(pct>=60)msg='Bom esforço! Alguns conceitos precisam de revisão, especialmente registos, responsabilidades e impacto económico.';
+  else msg='Vale a pena rever os tópicos de processo, responsabilidades, documentação e tecnologia antes da avaliação.';
+  document.getElementById('fscore').textContent=score;
+  document.getElementById('fmsg').textContent=msg;
+  document.getElementById('f-ok').textContent=score;
+  document.getElementById('f-ko').textContent=wrong;
+  document.getElementById('final-total-text').textContent=`respostas corretas em ${TOTAL}`;
+  const rl=document.getElementById('review-list');
+  rl.innerHTML=results.map((r,i)=>`<div class="ri" onclick="reviewQ(${i})" title="Clica para rever"><div class="ri-dot ${r?'ok':'ko'}"></div><div><strong>${i+1}.</strong> ${qs[i].q.substring(0,90)}… <span style="font-size:16px;color:${r?'#2ecc71':'#e63b2e'};margin-left:6px">${r?'✓':'✘'}</span></div></div>`).join('');
+  document.getElementById('final').style.display='block';
+  document.getElementById('btnSubmeter').disabled=false;
+  document.getElementById('submeter-ok').style.display='none';
+  document.getElementById('submeter-aviso').style.display='none';
+}
+
+function reviewQ(i){
+  document.getElementById('final').style.display='none';
+  document.getElementById('qcard').style.display='block';
+  idx=i;reviewMode=true;buildDots();renderFull();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function restart(){
+  idx=0;score=0;results=[];picks=[];reviewMode=false;
+  document.getElementById('sc').textContent='0';
+  document.getElementById('final').style.display='none';
+  document.getElementById('qcard').style.display='block';
+  document.getElementById('prog-bar').style.width='0%';
+  buildDots();render();
+}
+
+function skip(){
+  if(idx>=TOTAL-1)return;
+  const card=document.getElementById('qcard');
+  card.classList.add('fade');
+  setTimeout(()=>{idx++;reviewMode=(results[idx]!==undefined);renderFull();card.classList.remove('fade');},180);
+}
+
+// SUBMETER
+function submeterAtividade(){
+  if(results.length<TOTAL){
+    document.getElementById('submeter-aviso').style.display='block';
+    document.getElementById('submeter-ok').style.display='none';
+    return;
+  }
+  document.getElementById('submeter-aviso').style.display='none';
+  // Abrir modal personalizado
+  document.getElementById('modalInput').value='';
+  document.getElementById('modalOverlay').style.display='flex';
+  setTimeout(()=>document.getElementById('modalInput').focus(),100);
+}
+
+function fecharModal(){
+  document.getElementById('modalOverlay').style.display='none';
+}
+
+document.getElementById('modalInput').addEventListener('keydown',function(e){
+  if(e.key==='Enter')confirmarNome();
+});
+
+async function confirmarNome(){
+  const nome=document.getElementById('modalInput').value.trim();
+  if(!nome)return;
+  fecharModal();
+
+  const btn=document.getElementById('btnSubmeter');
+  btn.disabled=true;
+  btn.textContent='⏳ A submeter...';
+
+  const agora=new Date();
+  const dataFormatada=agora.toLocaleDateString('pt-PT')+' '+agora.toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'});
+  const erradas=TOTAL-score;
+
+  const dados={
+    nome: nome,
+    data: dataFormatada,
+    corretas: score,
+    erradas: erradas,
+    pontuacao: score
+  };
+
+  try{
+    await fetch(APPS_SCRIPT_URL,{
+      method:"POST",
+      mode:"no-cors",
+      body:JSON.stringify(dados),
+      headers:{"Content-Type":"application/json"}
+    });
+    btn.textContent='✅ Submetido';
+    document.getElementById('submeter-ok').style.display='block';
+  } catch(e){
+    btn.disabled=false;
+    btn.textContent='📤 Submeter Atividade';
+    alert("Erro ao submeter. Verifica a ligação à internet e tenta novamente.");
+  }
+}
+
+buildDots();render();
+</script>
+
+</body>
+</html>
