@@ -40,7 +40,6 @@ body{
 
 #app{font-family:var(--font-body);padding:1.25rem 0;max-width:800px;margin:0 auto}
 
-/* HEADER */
 .header{
   background:var(--dark);
   border:2px solid var(--border);
@@ -115,7 +114,6 @@ body{
   position:relative;
 }
 
-/* PROGRESS */
 .prog-wrap{margin-bottom:1.2rem}
 .prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .prog-label{
@@ -157,7 +155,6 @@ body{
   box-shadow:0 0 8px var(--red-glow);
 }
 
-/* QUESTION CARD */
 .qcard{
   background:var(--dark);
   border:2px solid var(--border);
@@ -194,7 +191,6 @@ body{
   padding-left:1rem;
 }
 
-/* ANSWER BUTTONS */
 .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:0}
 .abtn{
   padding:22px 18px;
@@ -226,13 +222,11 @@ body{
 .abtn:active:not(:disabled){transform:scale(0.98)}
 .abtn:disabled{cursor:not-allowed;opacity:0.7}
 
-/* Verdade button */
 .abtn.v{border-color:var(--green-dark);color:var(--green)}
 .abtn.v::before{background:rgba(46,204,113,0.08)}
 .abtn.v:hover:not(:disabled)::before{opacity:1}
 .abtn.v:hover:not(:disabled){border-color:var(--green);box-shadow:0 0 12px rgba(46,204,113,0.2)}
 
-/* Mito button */
 .abtn.m{border-color:var(--red-dark);color:var(--red)}
 .abtn.m::before{background:rgba(230,59,46,0.08)}
 .abtn.m:hover:not(:disabled)::before{opacity:1}
@@ -243,7 +237,6 @@ body{
 .abtn.reveal-correct{background:var(--green-dark);border-color:var(--green);color:#fff}
 .icon{width:30px;height:30px;flex-shrink:0}
 
-/* FEEDBACK */
 .fb{
   border-radius:3px;
   padding:1.2rem 1.5rem;
@@ -267,7 +260,6 @@ body{
 .fb-badge.ok{background:var(--green);color:#000}
 .fb-badge.ko{background:var(--red);color:#fff}
 
-/* REVIEW MODE BANNER */
 .review-mode-banner{
   background:rgba(240,165,0,0.1);
   border:1px solid var(--gold-dark);
@@ -283,7 +275,6 @@ body{
   text-align:center;
 }
 
-/* NAV BUTTONS */
 .nav-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:1rem}
 .btn-nav{
   width:100%;padding:16px;
@@ -301,7 +292,6 @@ body{
 .btn-next-nav{border:2px solid var(--green-dark);background:transparent;color:var(--green)}
 .btn-next-nav:hover{background:rgba(46,204,113,0.1);box-shadow:0 0 10px rgba(46,204,113,0.15)}
 
-/* SKIP */
 .btn-skip{
   width:100%;padding:14px;
   border-radius:3px;
@@ -318,7 +308,6 @@ body{
 }
 .btn-skip:hover{background:var(--mid);border-color:var(--muted);color:var(--text)}
 
-/* FINAL SCREEN */
 .final{
   background:var(--dark);
   border:2px solid var(--border);
@@ -374,7 +363,6 @@ body{
 .stat-n.ko{color:var(--red);text-shadow:0 0 20px var(--red-glow)}
 .stat-l{font-family:var(--font-mono);font-size:13px;color:var(--muted);margin-top:4px;letter-spacing:0.1em;text-transform:uppercase}
 
-/* SUBMIT */
 .btn-submeter{
   display:block;
   width:100%;
@@ -424,7 +412,6 @@ body{
   text-transform:uppercase;
 }
 
-/* RESTART */
 .btn-restart{
   padding:18px 40px;
   border-radius:3px;
@@ -441,7 +428,6 @@ body{
 }
 .btn-restart:hover{border-color:var(--text);color:var(--text);background:var(--mid)}
 
-/* REVIEW LIST */
 .review{text-align:left;border-top:1px solid var(--border);padding-top:1rem;margin-top:1rem}
 .review-title{
   font-family:var(--font-mono);
@@ -468,7 +454,6 @@ body{
 .ri-dot.ok{background:var(--green)}
 .ri-dot.ko{background:var(--red)}
 
-/* NOME MODAL */
 .modal-overlay{
   position:fixed;inset:0;
   background:rgba(0,0,0,0.85);
@@ -697,7 +682,13 @@ function buildDots(){
 function jumpTo(i){
   const card=document.getElementById('qcard');
   card.classList.add('fade');
-  setTimeout(()=>{idx=i;reviewMode=(results[i]!==undefined);renderFull();card.classList.remove('fade');},180);
+  setTimeout(()=>{
+    answered=false; // FIX: reset answered state when jumping via dots
+    idx=i;
+    reviewMode=(results[i]!==undefined);
+    renderFull();
+    card.classList.remove('fade');
+  },180);
 }
 
 function updateDots(){
@@ -855,6 +846,7 @@ function showFinal(){
 function reviewQ(i){
   document.getElementById('final').style.display='none';
   document.getElementById('qcard').style.display='block';
+  answered=false; // FIX: reset answered when entering review mode from summary
   idx=i;reviewMode=true;buildDots();renderFull();
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -872,7 +864,13 @@ function skip(){
   if(idx>=TOTAL-1)return;
   const card=document.getElementById('qcard');
   card.classList.add('fade');
-  setTimeout(()=>{idx++;reviewMode=(results[idx]!==undefined);renderFull();card.classList.remove('fade');},180);
+  setTimeout(()=>{
+    answered=false; // FIX: reset answered when skipping
+    idx++;
+    reviewMode=(results[idx]!==undefined);
+    renderFull();
+    card.classList.remove('fade');
+  },180);
 }
 
 // SUBMETER
@@ -883,7 +881,6 @@ function submeterAtividade(){
     return;
   }
   document.getElementById('submeter-aviso').style.display='none';
-  // Abrir modal personalizado
   document.getElementById('modalInput').value='';
   document.getElementById('modalOverlay').style.display='flex';
   setTimeout(()=>document.getElementById('modalInput').focus(),100);
